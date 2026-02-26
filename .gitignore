@@ -1,3 +1,4 @@
 *.json
+.pages/
 MetaCPAN-Client/
 stderr.log
