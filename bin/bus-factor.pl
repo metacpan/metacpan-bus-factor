@@ -5,10 +5,6 @@
 
 use v5.12;
 
-# Remove this once https://github.com/metacpan/MetaCPAN-Client/pull/134 has
-# been released.
-use lib 'MetaCPAN-Client/lib';
-
 use Cpanel::JSON::XS ();
 use DateTime         ();
 use MetaCPAN::Client ();
