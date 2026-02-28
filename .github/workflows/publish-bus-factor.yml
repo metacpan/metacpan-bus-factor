@@ -27,6 +27,11 @@ jobs:
           cp bus_factor.json .pages/
           cp bus_factor.json.gz .pages/
 
+      - name: Convert README to index.html
+        uses: davorg/readme-to-index@v1
+        with:
+          output: .pages/index.html
+
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v4
         with:
