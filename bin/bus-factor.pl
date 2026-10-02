@@ -17,23 +17,40 @@ use Ref::Util        qw( is_plain_arrayref );
     # reaches Elasticsearch, so the scroll has not advanced and resending the
     # identical request is safe (and in practice succeeds on the first retry).
     # Any other failure is left alone: blindly retrying a scroll request that
-    # did reach Elasticsearch could silently skip a batch.
+    # did reach Elasticsearch could silently skip a batch. Only scroll
+    # continuation POSTs are retried; other requests (including the scroll
+    # cleanup DELETE) pass straight through.
 
     package RetryingUA;
     use parent 'HTTP::Tiny';
 
-    sub request {
-        my ( $self, @args ) = @_;
+    my $max_retries = 10;
+    my $retry_delay = 1;
 
-        my $res;
-        for my $attempt ( 1 .. 10 ) {
-            $res = $self->SUPER::request(@args);
-            return $res
-                unless $res->{status} == 500
-                && ( $res->{content} // q{} ) =~ /Scroll Id required/;
-            say STDERR "  API said 'Scroll Id required'; retrying request ($attempt)";
-            sleep 1;
+    sub _scroll_id_lost {
+        my $res = shift;
+        return $res->{status} == 500
+            && ( $res->{content} // q{} ) =~ /Scroll Id required/;
+    }
+
+    sub request {
+        my ( $self, $method, $url, @rest ) = @_;
+
+        my $res = $self->SUPER::request( $method, $url, @rest );
+        return $res
+            unless $method eq 'POST' && $url =~ m{/_search/scroll\b};
+
+        for my $retry ( 1 .. $max_retries ) {
+            return $res unless _scroll_id_lost($res);
+            say STDERR
+                "  API said 'Scroll Id required'; retrying request ($retry/$max_retries)";
+            sleep $retry_delay;
+            $res = $self->SUPER::request( $method, $url, @rest );
         }
+
+        say STDERR
+            "  API still said 'Scroll Id required' after $max_retries retries; giving up on this request"
+            if _scroll_id_lost($res);
         return $res;
     }
 }
