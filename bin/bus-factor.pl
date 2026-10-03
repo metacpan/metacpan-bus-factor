@@ -3,7 +3,7 @@
 # See https://www.olafalders.com/2021/06/30/cpan-bus-factor/ for what inspired
 # this metric.
 
-use v5.12;
+use v5.40;
 
 use Cpanel::JSON::XS ();
 use DateTime         ();
@@ -12,6 +12,34 @@ use Module::CoreList ();
 use Ref::Util        qw( is_plain_arrayref );
 
 my $mcpan = MetaCPAN::Client->new;
+
+# The API intermittently fails scroll requests (see
+# https://github.com/metacpan/metacpan-api/issues/1506). When fetching the
+# next batch fails, the scroller's state is unchanged, so calling next()
+# again simply resends the same request. If a retry ever skipped a batch, the
+# scroll would end short of its total, which the checks below turn into a
+# hard failure rather than incomplete output.
+
+sub next_with_retry {
+    my $rs = shift;
+    for my $attempt ( 1 .. 10 ) {
+        try {
+            return $rs->next;
+        }
+        catch ($e) {
+            chomp $e;
+            say STDERR "  retrying after: $e";
+            sleep $attempt;
+        }
+    }
+    die "giving up after 10 attempts\n";
+}
+
+sub check_complete {
+    my ( $rs, $count ) = @_;
+    die "scroll ended early: got $count of ${\ $rs->total }\n"
+        if $count < $rs->total;
+}
 
 # Scroll all releases from the last 2 years, collect unique PAUSE IDs.
 # These will be our "active" authors.
@@ -32,13 +60,14 @@ my $recent = $mcpan->all(
 my %active_authors;
 my $count = 0;
 
-while ( my $release = $recent->next ) {
+while ( my $release = next_with_retry($recent) ) {
     my $author = $release->author;
     $active_authors{$author} = 1 if defined $author;
     $count++;
     say STDERR "  releases scanned: $count" if $count % 5000 == 0;
 }
 
+check_complete( $recent, $count );
 say STDERR "  releases scanned: $count (done)";
 say STDERR "  active authors: " . scalar( keys %active_authors );
 
@@ -53,7 +82,10 @@ my $perms = $mcpan->all( 'permissions', { scroller_size => 500 } );
 my %perms;
 $count = 0;
 
-while ( my $perm = $perms->next ) {
+while ( my $perm = next_with_retry($perms) ) {
+    $count++;
+    say STDERR "  permissions scanned: $count" if $count % 5000 == 0;
+
     my $module = $perm->module_name;
     next unless defined $module;
 
@@ -65,11 +97,9 @@ while ( my $perm = $perms->next ) {
     }
 
     $perms{$module} = { owner => $owner, all => \@all } if @all;
-
-    $count++;
-    say STDERR "  permissions scanned: $count" if $count % 5000 == 0;
 }
 
+check_complete( $perms, $count );
 say STDERR "  permissions scanned: $count (done)";
 
 # Scroll all latest releases, map distribution -> main_module,
@@ -91,7 +121,10 @@ my $latest = $mcpan->all(
 my %results;
 $count = 0;
 
-while ( my $release = $latest->next ) {
+while ( my $release = next_with_retry($latest) ) {
+    $count++;
+    say STDERR "  distributions processed: $count" if $count % 5000 == 0;
+
     my $dist = $release->distribution;
     my $main = $release->main_module;
 
@@ -113,11 +146,9 @@ while ( my $release = $latest->next ) {
         is_dual_life         => $is_dual_life,
         owner                => $perm ? $perm->{owner} : undef,
     };
-
-    $count++;
-    say STDERR "  distributions processed: $count" if $count % 5000 == 0;
 }
 
+check_complete( $latest, $count );
 say STDERR "  distributions processed: $count (done)";
 
 # ── Output ───────────────────────────────────────────────────────────
