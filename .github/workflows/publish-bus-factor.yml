@@ -7,7 +7,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Queue rather than cancel, so a dispatch never aborts a publish mid-deploy
+  cancel-in-progress: false
 
 jobs:
   generate:
