@@ -11,6 +11,9 @@ use MetaCPAN::Client ();
 use Module::CoreList ();
 use Ref::Util        qw( is_plain_arrayref );
 
+# Lets tests load the subs without hitting the network.
+return 1 if caller;
+
 my $mcpan = MetaCPAN::Client->new;
 
 # The API intermittently fails scroll requests (see
@@ -39,6 +42,13 @@ sub check_complete {
     my ( $rs, $count ) = @_;
     die "scroll ended early: got $count of ${\ $rs->total }\n"
         if $count < $rs->total;
+}
+
+# The Perl 5 Porters act as a backstop for dual-life modules.
+sub bus_factor {
+    my ( $active, $is_dual_life ) = @_;
+    my $n = @$active;
+    return $is_dual_life && $n < 5 ? 5 : $n;
 }
 
 # Scroll all releases from the last 2 years, collect unique PAUSE IDs.
@@ -142,6 +152,7 @@ while ( my $release = next_with_retry($latest) ) {
 
     $results{$dist} = {
         active_maintainers   => \@active_maintainers,
+        bus_factor           => bus_factor( \@active_maintainers, $is_dual_life ),
         inactive_maintainers => \@inactive_maintainers,
         is_dual_life         => $is_dual_life,
         owner                => $perm ? $perm->{owner} : undef,

@@ -31,6 +31,7 @@ The JSON is keyed by distribution name:
 {
   "Moose": {
     "active_maintainers": ["DROLSKY", "ETHER"],
+    "bus_factor": 2,
     "inactive_maintainers": ["DOY", "FLORA"],
     "owner": "STEVAN",
     "is_dual_life": false
