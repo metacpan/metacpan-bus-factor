@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions: {}
+    container:
+      image: perldocker/perl-tester:5.42
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: cpm install -g --with-test --cpanfile cpanfile
+
+      - name: Run tests
+        run: prove -lr t
