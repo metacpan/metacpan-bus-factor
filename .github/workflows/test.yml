@@ -1,0 +1,27 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # default, not measured; see tune-gh-actions-timeouts
+    permissions: {}
+    container:
+      image: perldocker/perl-tester:5.44
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install dependencies
+        run: cpm install -g --with-test --cpanfile cpanfile
+
+      - name: Run tests
+        run: prove -lr t
