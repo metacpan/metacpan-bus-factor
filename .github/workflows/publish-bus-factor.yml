@@ -12,6 +12,7 @@ concurrency:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions: {}
     container:
       image: perldocker/perl-tester:5.44
@@ -47,6 +48,7 @@ jobs:
   deploy:
     needs: generate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write

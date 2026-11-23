@@ -13,6 +13,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15   # default, not measured; see tune-gh-actions-timeouts
     permissions: {}
     container:
       image: perldocker/perl-tester:5.44
