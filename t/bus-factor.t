@@ -18,7 +18,7 @@ is(
     Cpanel::JSON::XS->new->encode(
         [ bus_factor( [], $true ), bus_factor( [qw( A B C D E F )], $true ) ]
     ),
-    '[5,6]', 'encodes as JSON numbers'
+    '[5,6]', 'returns plain numbers, not strings'
 );
 
 done_testing;

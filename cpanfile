@@ -1,6 +1,7 @@
 requires 'Cpanel::JSON::XS';
 requires 'DateTime';
 requires 'Exporter';
+requires 'FindBin';
 requires 'List::Util';
 requires 'MetaCPAN::Client', '2.039000';
 requires 'Module::CoreList';
