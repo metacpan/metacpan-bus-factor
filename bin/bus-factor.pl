@@ -7,13 +7,13 @@ use v5.40;
 
 use Cpanel::JSON::XS ();
 use DateTime         ();
-use List::Util       qw( max );
+use FindBin          ();
 use MetaCPAN::Client ();
 use Module::CoreList ();
 use Ref::Util        qw( is_plain_arrayref );
 
-# Tests load subs offline; only pure subs are safe (file lexicals stay unset).
-return 1 if caller;
+use lib "$FindBin::Bin/../lib";
+use MetaCPAN::BusFactor qw( bus_factor );
 
 my $mcpan = MetaCPAN::Client->new;
 
@@ -43,13 +43,6 @@ sub check_complete {
     my ( $rs, $count ) = @_;
     die "scroll ended early: got $count of ${\ $rs->total }\n"
         if $count < $rs->total;
-}
-
-# The Perl 5 Porters act as a backstop for dual-life modules.
-sub bus_factor {
-    my ( $active, $is_dual_life ) = @_;
-    my $n = @$active;
-    return $is_dual_life ? max( $n, 5 ) : $n;
 }
 
 # Scroll all releases from the last 2 years, collect unique PAUSE IDs.

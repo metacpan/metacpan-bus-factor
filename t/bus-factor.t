@@ -3,10 +3,8 @@ use v5.40;
 use Test2::V0;
 
 use Cpanel::JSON::XS ();
-use FindBin          ();
 
-my $script = "$FindBin::Bin/../bin/bus-factor.pl";
-do $script or die $@ || "$script: $!";
+use MetaCPAN::BusFactor qw( bus_factor );
 
 my $true  = Cpanel::JSON::XS::true;
 my $false = Cpanel::JSON::XS::false;
