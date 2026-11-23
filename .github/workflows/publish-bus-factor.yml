@@ -15,7 +15,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install dependencies
-        run: cpm install -g --cpanfile cpanfile
+        run: cpm install -g --with-test --cpanfile cpanfile
+
+      - name: Run tests
+        run: prove -lr t
 
       - name: Generate bus factor data
         run: perl bin/bus-factor.pl > bus_factor.json
