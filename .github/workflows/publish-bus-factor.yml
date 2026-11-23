@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions: {}
     container:
-      image: perldocker/perl-tester:5.42
+      image: perldocker/perl-tester:5.44
     steps:
       - uses: actions/checkout@v7
 
