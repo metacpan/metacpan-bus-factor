@@ -7,11 +7,12 @@ use v5.40;
 
 use Cpanel::JSON::XS ();
 use DateTime         ();
+use List::Util       qw( max );
 use MetaCPAN::Client ();
 use Module::CoreList ();
 use Ref::Util        qw( is_plain_arrayref );
 
-# Lets tests load the subs without hitting the network.
+# Tests load subs offline; only pure subs are safe (file lexicals stay unset).
 return 1 if caller;
 
 my $mcpan = MetaCPAN::Client->new;
@@ -48,7 +49,7 @@ sub check_complete {
 sub bus_factor {
     my ( $active, $is_dual_life ) = @_;
     my $n = @$active;
-    return $is_dual_life && $n < 5 ? 5 : $n;
+    return $is_dual_life ? max( $n, 5 ) : $n;
 }
 
 # Scroll all releases from the last 2 years, collect unique PAUSE IDs.
