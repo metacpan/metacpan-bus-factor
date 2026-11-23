@@ -7,9 +7,9 @@ shipped with the Perl core) get a floor of 5, since the Perl 5 Porters act as a
 backstop.
 
 A bus factor of 1 means only a single maintainer appears to able to release new
-versions. A bus factor of 0 means nobody with upload permission has been active
-recently. We define "active recently" as anyone who has uploaded anything to
-CPAN in the last 2 years.
+versions. For a distribution which is not dual-life, a bus factor of 0 means
+nobody with upload permission has been active recently. We define "active
+recently" as anyone who has uploaded anything to CPAN in the last 2 years.
 
 This repository generates a nightly JSON snapshot of bus factor data for every
 distribution on CPAN which has a status of "latest" and publishes it to GitHub
@@ -31,6 +31,7 @@ The JSON is keyed by distribution name:
 {
   "Moose": {
     "active_maintainers": ["DROLSKY", "ETHER"],
+    "bus_factor": 2,
     "inactive_maintainers": ["DOY", "FLORA"],
     "owner": "STEVAN",
     "is_dual_life": false

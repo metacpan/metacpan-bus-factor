@@ -7,9 +7,13 @@ use v5.40;
 
 use Cpanel::JSON::XS ();
 use DateTime         ();
+use FindBin          ();
 use MetaCPAN::Client ();
 use Module::CoreList ();
 use Ref::Util        qw( is_plain_arrayref );
+
+use lib "$FindBin::Bin/../lib";
+use MetaCPAN::BusFactor qw( bus_factor );
 
 my $mcpan = MetaCPAN::Client->new;
 
@@ -142,6 +146,7 @@ while ( my $release = next_with_retry($latest) ) {
 
     $results{$dist} = {
         active_maintainers   => \@active_maintainers,
+        bus_factor           => bus_factor( \@active_maintainers, $is_dual_life ),
         inactive_maintainers => \@inactive_maintainers,
         is_dual_life         => $is_dual_life,
         owner                => $perm ? $perm->{owner} : undef,
